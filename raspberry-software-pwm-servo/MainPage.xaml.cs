@@ -1,8 +1,11 @@
-﻿using System;
+﻿using Microsoft.IoT.Lightning.Providers;
+using raspberry_software_pwm_servo.Devices;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Devices;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -22,9 +25,51 @@ namespace raspberry_software_pwm_servo
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private Servo s;
         public MainPage()
         {
             this.InitializeComponent();
+
+            // Register for the unloaded event so we can clean up upon exit
+            Unloaded += MainPage_Unloaded;
+
+            // Set Lightning as the default provider
+            if (LightningProvider.IsLightningEnabled)
+                LowLevelDevicesController.DefaultProvider = LightningProvider.GetAggregateProvider();
+
+            // Initialize the sensors
+            InitializeSensors();
+
+            // Setting the DataContext
+            this.DataContext = s;
+        }
+
+        private async void InitializeSensors()
+        {
+            try
+            {
+                s = new Devices.Servo(5);
+
+                s_1.Minimum = 0;
+                s_1.Maximum = s.MAX_ANGLE;
+
+                await s.InitializeAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Initialization has failed: " + ex);
+            }
+        }
+
+        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            s.Dispose();
+            s = null;
+        }
+
+        private void bt_1_Click(object sender, RoutedEventArgs e)
+        {
+            s.MoveServo();
         }
     }
 }

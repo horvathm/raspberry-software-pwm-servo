@@ -5,9 +5,30 @@
     xmlns:local="using:raspberry_software_pwm_servo"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:raspberry_software_pwm_servo.Converters"
     mc:Ignorable="d">
+    <Page.Resources>
+        <converters:InvertBooleanConverter x:Key="InvertBooleanConverter"/>
+    </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+        <StackPanel Margin="-10,-210,10,210" VerticalAlignment="Bottom">
+            <CheckBox x:Name="cb_0" Content="Follow the property"
+                      HorizontalAlignment="Center" Margin="0,10,0,10"
+                      IsChecked="{Binding AutoFollow, Mode=TwoWay}"/>
+            <TextBlock x:Name="tb_1" Text="Pulse width"
+                     HorizontalAlignment="Center" Margin="0,10,0,10"/>
+            <TextBox x:Name="tb_2" Width="100"
+                     Text="{Binding DesiredPulseWidth, Mode=TwoWay}"                                          
+                     HorizontalAlignment="Center" Margin="0,10,0,10"/>
+            <TextBlock x:Name="tb_3" Text="Angle"
+                     HorizontalAlignment="Center" Margin="0,10,0,10"/>
+            <Slider x:Name="s_1" Width="150" 
+                     Value="{Binding DesiredAngle, Mode=TwoWay}"
+                     HorizontalAlignment="Center" Margin="0,10,0,10"/>
+            <Button x:Name="bt_1" Content="Move"
+                     HorizontalAlignment="Center" Margin="0,10,0,10" Click="bt_1_Click"
+                    IsEnabled="{Binding Path=AutoFollow, Converter={StaticResource InvertBooleanConverter}}"/>
+        </StackPanel>
     </Grid>
 </Page>
