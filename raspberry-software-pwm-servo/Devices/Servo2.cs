@@ -8,13 +8,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Pwm;
+using Windows.UI.Xaml;
 
-namespace raspberry_software_pwm_servo.Devices
+namespace ServoApp.Devices
 {
     /// <summary>
-    /// Laggos, addig nem tokeletes
+    /// Servo2. Till the timer suspends it's not working as I wanted to
     /// </summary>
-    class Servo : IDisposable, INotifyPropertyChanged
+    class Servo2 : IDisposable, INotifyPropertyChanged
     {
         #region Fields
         public readonly int PIN_NUMBER;
@@ -34,7 +35,9 @@ namespace raspberry_software_pwm_servo.Devices
 
         #region Properties
         public bool IsInitialized { get; private set; }
-        public bool AutoFollow {
+
+        public bool AutoFollow
+        {
             get { return autoFollow; }
             set { Set(ref autoFollow, value); }
         }
@@ -54,20 +57,17 @@ namespace raspberry_software_pwm_servo.Devices
                 if (value == 0)
                     desiredPulseWidth = MIN_PULSE_WIDTH;
                 else
-                    desiredPulseWidth = MIN_PULSE_WIDTH + (MAX_PULSE_WIDTH - MIN_PULSE_WIDTH) / ((double)MAX_ANGLE / value);
+                    desiredPulseWidth = MIN_PULSE_WIDTH +  (MAX_PULSE_WIDTH - MIN_PULSE_WIDTH) / ((double)MAX_ANGLE / value);
 
                 RaisePropertyChanged(nameof(DesiredPulseWidth));
 
                 Set(ref desiredAngle, value);
 
-                if(AutoFollow)
-                {
-                    var percentage = desiredPulseWidth / (1000.0 / FREQUENCY);
-                    pin.SetActiveDutyCyclePercentage(percentage);
-                }
+                if (AutoFollow)
+                    MoveServo();
             }
         }
-        private int desiredAngle;
+        private int desiredAngle=180;
 
         public double DesiredPulseWidth
         {
@@ -80,21 +80,16 @@ namespace raspberry_software_pwm_servo.Devices
                 if (value < MIN_PULSE_WIDTH || value > MAX_PULSE_WIDTH)
                     throw new ArgumentException("Pulsewidth is out of range");
 
-                //desiredAngle = (int)((value - MIN_PULSE_WIDTH) * 180);
-                desiredAngle = (int)(((value -MIN_PULSE_WIDTH) / (MAX_PULSE_WIDTH - MIN_PULSE_WIDTH))*MAX_ANGLE);
+                desiredAngle = (int)((value - MIN_PULSE_WIDTH) * 180); // szar
 
                 RaisePropertyChanged(nameof(DesiredAngle));
 
                 Set(ref desiredPulseWidth, value);
-
                 if (AutoFollow)
-                {
-                    var percentage = value / (1000.0 / FREQUENCY);
-                    pin.SetActiveDutyCyclePercentage(percentage);
-                }
+                    MoveServo();
             }
         }
-        private double desiredPulseWidth;
+        private double desiredPulseWidth=2;
         #endregion
 
         /// <summary>
@@ -106,7 +101,7 @@ namespace raspberry_software_pwm_servo.Devices
         /// <param name="maxPulseWidth"></param>
         /// <param name="maxAngle"></param>
         /// <param name="signalDuration"></param>
-        public Servo(int pinNumber, int frequency = 50, double minPulseWidth = 0.7, double maxPulseWidth = 2.6, int maxAngle = 180, int signalDuration = 40)
+        public Servo2(int pinNumber, int frequency = 50, double minPulseWidth = 0.7, double maxPulseWidth = 2.6, int maxAngle = 180, int signalDuration = 10)
         {
             this.PIN_NUMBER = pinNumber;
             this.FREQUENCY = frequency;
@@ -124,17 +119,44 @@ namespace raspberry_software_pwm_servo.Devices
                 throw new Exception("Servo can only be used with Lihtning provider");
             }
 
-
+            
             controller = (await PwmController.GetControllersAsync(LightningPwmProvider.GetPwmProvider()))[1];
 
             pin = controller.OpenPin(PIN_NUMBER);
             controller.SetDesiredFrequency(FREQUENCY);
 
-            pin.Start();
-
+            
             DesiredPulseWidth = MIDDLE_PULSE_WIDTH;
-
             MoveServo();
+
+            t = new Timer(TimerTick, null, TimeSpan.FromMinutes(1).Milliseconds, Timeout.Infinite);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state"></param>
+        private void TimerTick(object state)
+        {
+            // do some work not connected with UI
+            var percentage = DesiredPulseWidth / (1000.0 / FREQUENCY);
+            pin.SetActiveDutyCyclePercentage(percentage);
+
+            lock (lockObject)
+            {
+                pin.Start();
+                Task.Delay(SIGNAL_DURATION).Wait();
+                pin.Stop();
+            }
+
+            /*
+            await Window.Current.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,
+                () =>
+                {
+                    
+                    // do some work on UI here;
+                });
+            */
         }
 
         /// <summary>
@@ -142,24 +164,30 @@ namespace raspberry_software_pwm_servo.Devices
         /// </summary>
         public void MoveServo()
         {
-            var percentage = desiredPulseWidth / (1000.0 / FREQUENCY);
+            //motor mozgatás lock azon obj
+            var percentage = DesiredPulseWidth / (1000.0 / FREQUENCY);
             pin.SetActiveDutyCyclePercentage(percentage);
+            
+            lock(lockObject)
+            {
+                pin.Start();
+                Task.Delay(SIGNAL_DURATION).Wait();
+                pin.Stop();
+            }
         }
-
 
         /// <summary>
         /// Free up our resources.
         /// </summary>
         public void Dispose()
         {
-            pin.Stop();
             pin.Dispose();
             pin = null;
 
             t.Dispose();
             t = null;
         }
-
+        
         #region INotifyPropertyChanged implementation
         public event PropertyChangedEventHandler PropertyChanged;
 
