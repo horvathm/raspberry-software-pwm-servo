@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Windows.Devices.Pwm;
 using Windows.UI.Xaml;
 
-namespace ServoApp.Devices
+namespace raspberry_software_pwm_servo.Devices
 {
     /// <summary>
     /// Servo2. Till the timer suspends it's not working as I wanted to
@@ -31,11 +31,15 @@ namespace ServoApp.Devices
         Timer t;
 
         private Object lockObject = new Object();
+        private double percentage;
         #endregion
 
         #region Properties
         public bool IsInitialized { get; private set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool AutoFollow
         {
             get { return autoFollow; }
@@ -43,6 +47,9 @@ namespace ServoApp.Devices
         }
         private bool autoFollow = true;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public int DesiredAngle
         {
             get
@@ -69,6 +76,9 @@ namespace ServoApp.Devices
         }
         private int desiredAngle=180;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public double DesiredPulseWidth
         {
             get
@@ -80,11 +90,12 @@ namespace ServoApp.Devices
                 if (value < MIN_PULSE_WIDTH || value > MAX_PULSE_WIDTH)
                     throw new ArgumentException("Pulsewidth is out of range");
 
-                desiredAngle = (int)((value - MIN_PULSE_WIDTH) * 180); // szar
+                desiredAngle = (int)(((value - MIN_PULSE_WIDTH) / (MAX_PULSE_WIDTH - MIN_PULSE_WIDTH)) * MAX_ANGLE);
 
                 RaisePropertyChanged(nameof(DesiredAngle));
 
                 Set(ref desiredPulseWidth, value);
+
                 if (AutoFollow)
                     MoveServo();
             }
@@ -101,7 +112,9 @@ namespace ServoApp.Devices
         /// <param name="maxPulseWidth"></param>
         /// <param name="maxAngle"></param>
         /// <param name="signalDuration"></param>
-        public Servo2(int pinNumber, int frequency = 50, double minPulseWidth = 0.7, double maxPulseWidth = 2.6, int maxAngle = 180, int signalDuration = 10)
+        public Servo2(int pinNumber, int frequency = 50, 
+            double minPulseWidth = 0.7, double maxPulseWidth = 2.6, 
+            int maxAngle = 180, int signalDuration = 15)
         {
             this.PIN_NUMBER = pinNumber;
             this.FREQUENCY = frequency;
@@ -129,7 +142,7 @@ namespace ServoApp.Devices
             DesiredPulseWidth = MIDDLE_PULSE_WIDTH;
             MoveServo();
 
-            t = new Timer(TimerTick, null, TimeSpan.FromMinutes(1).Milliseconds, Timeout.Infinite);
+            t = new Timer(TimerTick, null, 0, TimeSpan.FromMilliseconds(100).Milliseconds);
         }
 
         /// <summary>
@@ -139,7 +152,6 @@ namespace ServoApp.Devices
         private void TimerTick(object state)
         {
             // do some work not connected with UI
-            var percentage = DesiredPulseWidth / (1000.0 / FREQUENCY);
             pin.SetActiveDutyCyclePercentage(percentage);
 
             lock (lockObject)
@@ -165,13 +177,13 @@ namespace ServoApp.Devices
         public void MoveServo()
         {
             //motor mozgatás lock azon obj
-            var percentage = DesiredPulseWidth / (1000.0 / FREQUENCY);
+            percentage = DesiredPulseWidth / (1000.0 / FREQUENCY);
             pin.SetActiveDutyCyclePercentage(percentage);
             
             lock(lockObject)
             {
                 pin.Start();
-                Task.Delay(SIGNAL_DURATION).Wait();
+                Task.Delay(SIGNAL_DURATION*3).Wait();
                 pin.Stop();
             }
         }

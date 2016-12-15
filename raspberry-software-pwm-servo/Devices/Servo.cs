@@ -34,12 +34,19 @@ namespace raspberry_software_pwm_servo.Devices
 
         #region Properties
         public bool IsInitialized { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool AutoFollow {
             get { return autoFollow; }
             set { Set(ref autoFollow, value); }
         }
         private bool autoFollow = true;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public int DesiredAngle
         {
             get
@@ -69,6 +76,9 @@ namespace raspberry_software_pwm_servo.Devices
         }
         private int desiredAngle;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public double DesiredPulseWidth
         {
             get
@@ -80,7 +90,6 @@ namespace raspberry_software_pwm_servo.Devices
                 if (value < MIN_PULSE_WIDTH || value > MAX_PULSE_WIDTH)
                     throw new ArgumentException("Pulsewidth is out of range");
 
-                //desiredAngle = (int)((value - MIN_PULSE_WIDTH) * 180);
                 desiredAngle = (int)(((value -MIN_PULSE_WIDTH) / (MAX_PULSE_WIDTH - MIN_PULSE_WIDTH))*MAX_ANGLE);
 
                 RaisePropertyChanged(nameof(DesiredAngle));
@@ -117,6 +126,10 @@ namespace raspberry_software_pwm_servo.Devices
             this.MIDDLE_PULSE_WIDTH = ((maxPulseWidth - minPulseWidth) / 2) + minPulseWidth;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public async Task InitializeAsync()
         {
             if (!LightningProvider.IsLightningEnabled)

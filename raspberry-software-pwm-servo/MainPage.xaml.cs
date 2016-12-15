@@ -25,7 +25,9 @@ namespace raspberry_software_pwm_servo
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        //private Servo2 s;
         private Servo s;
+
         public MainPage()
         {
             this.InitializeComponent();
@@ -48,6 +50,7 @@ namespace raspberry_software_pwm_servo
         {
             try
             {
+                //s = new Devices.Servo2(5);
                 s = new Devices.Servo(5);
 
                 s_1.Minimum = 0;
