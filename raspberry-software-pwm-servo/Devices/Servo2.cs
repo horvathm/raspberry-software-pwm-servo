@@ -38,7 +38,7 @@ namespace raspberry_software_pwm_servo.Devices
         public bool IsInitialized { get; private set; }
 
         /// <summary>
-        /// 
+        /// Boolean property. If true the servo will follow the value of the Desired_____ properties
         /// </summary>
         public bool AutoFollow
         {
@@ -48,7 +48,7 @@ namespace raspberry_software_pwm_servo.Devices
         private bool autoFollow = true;
 
         /// <summary>
-        /// 
+        /// You can set the desired angle here. If you set, the desired pulse with will be calculated.
         /// </summary>
         public int DesiredAngle
         {
@@ -77,7 +77,7 @@ namespace raspberry_software_pwm_servo.Devices
         private int desiredAngle=180;
 
         /// <summary>
-        /// 
+        /// You can set the desired pusle width here. If you set, the desired angle will be calculated
         /// </summary>
         public double DesiredPulseWidth
         {
@@ -104,7 +104,8 @@ namespace raspberry_software_pwm_servo.Devices
         #endregion
 
         /// <summary>
-        /// 
+        /// Ctor where you can set the min pulse with (0 angle) and the max puse width (max angle) and other important things
+        /// that you can find in the documentation.
         /// </summary>
         /// <param name="pinNumber"></param>
         /// <param name="frequency"></param>
@@ -125,6 +126,10 @@ namespace raspberry_software_pwm_servo.Devices
             this.MIDDLE_PULSE_WIDTH = ((maxPulseWidth - minPulseWidth) / 2) + minPulseWidth;
         }
 
+        /// <summary>
+        /// Initialize the servo.
+        /// </summary>
+        /// <returns></returns>
         public async Task InitializeAsync()
         {
             if (!LightningProvider.IsLightningEnabled)
@@ -146,7 +151,7 @@ namespace raspberry_software_pwm_servo.Devices
         }
 
         /// <summary>
-        /// 
+        /// If you dont move the servo outter forces can disorient it so we have to refresh it periodically.
         /// </summary>
         /// <param name="state"></param>
         private void TimerTick(object state)
@@ -172,7 +177,7 @@ namespace raspberry_software_pwm_servo.Devices
         }
 
         /// <summary>
-        /// 
+        /// MoveServo method moves the servo into the position that desiredPulseWidth field determine. 
         /// </summary>
         public void MoveServo()
         {
