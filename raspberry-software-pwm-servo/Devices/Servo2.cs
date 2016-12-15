@@ -113,9 +113,7 @@ namespace raspberry_software_pwm_servo.Devices
         /// <param name="maxPulseWidth"></param>
         /// <param name="maxAngle"></param>
         /// <param name="signalDuration"></param>
-        public Servo2(int pinNumber, int frequency = 50, 
-            double minPulseWidth = 0.7, double maxPulseWidth = 2.6, 
-            int maxAngle = 180, int signalDuration = 15)
+        public Servo2(int pinNumber, int frequency = 50, double minPulseWidth = 1, double maxPulseWidth = 2, int maxAngle = 180, int signalDuration = 15)
         {
             this.PIN_NUMBER = pinNumber;
             this.FREQUENCY = frequency;

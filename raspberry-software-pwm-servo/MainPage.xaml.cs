@@ -50,8 +50,8 @@ namespace raspberry_software_pwm_servo
         {
             try
             {
-                //s = new Devices.Servo2(5);
-                s = new Devices.Servo(5);
+                //s = new Devices.Servo2(pinNumber: 5, minPulseWidth: 0.7 ,maxPulseWidth: 2.6);
+                s = new Devices.Servo(pinNumber: 5, minPulseWidth: 0.7 ,maxPulseWidth: 2.6);
 
                 s_1.Minimum = 0;
                 s_1.Maximum = s.MAX_ANGLE;
